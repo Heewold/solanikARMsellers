@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Остатки — АРМ{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-4">Остатки</h1>
+
+<form method="get" class="mb-4">
+  <select name="warehouse" class="select select-bordered">
+    <option value="">Все склады</option>
+    {% for w in warehouses %}
+      <option value="{{ w.id }}" {% if wid == w.id %}selected{% endif %}>{{ w.name }}</option>
+    {% endfor %}
+  </select>
+  <button class="btn ml-2">Фильтр</button>
+  <a class="btn btn-ghost ml-2" href="{% url 'low_stock' %}">Низкие остатки</a>
+</form>
+
+<div class="card bg-base-100 shadow-sm">
+  <div class="card-body p-0">
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Товар</th><th>Вариант</th><th>Склад</th>
+            <th class="text-right">На руках</th>
+            <th class="text-right">Резерв</th>
+            <th class="text-right">Доступно</th>
+            <th class="text-right">Мин.</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in stocks %}
+          <tr class="hover">
+            <td>{{ s.variant.product.name }}</td>
+            <td>{{ s.variant.size }}/{{ s.variant.color }} ({{ s.variant.sku }})</td>
+            <td>{{ s.warehouse.name }}</td>
+            <td class="text-right">{{ s.qty_on_hand }}</td>
+            <td class="text-right">{{ s.qty_reserved }}</td>
+            <td class="text-right">{{ s.available }}</td>
+            <td class="text-right">{{ s.min_qty }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-center text-slate-400 py-8">Нет данных</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
