@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Товары — АРМ{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-4">Товары</h1>
+
+<form method="get" class="grid grid-cols-12 gap-2 mb-4">
+  <input name="q" value="{{ q }}" placeholder="Название / SKU / Штрих-код"
+         class="input input-bordered col-span-5" />
+  <select name="brand" class="select select-bordered col-span-3">
+    <option value="">Бренд</option>
+    {% for b in brands %}
+      <option value="{{ b.id }}" {% if brand_selected == b.id %}selected{% endif %}>{{ b.name }}</option>
+    {% endfor %}
+  </select>
+  <select name="category" class="select select-bordered col-span-3">
+    <option value="">Категория</option>
+    {% for c in categories %}
+      <option value="{{ c.id }}" {% if category_selected == c.id %}selected{% endif %}>{{ c.name }}</option>
+    {% endfor %}
+  </select>
+  <button class="btn col-span-1">Фильтр</button>
+</form>
+
+<div class="card bg-base-100 shadow-sm">
+  <div class="card-body p-0">
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Товар</th>
+            <th>Бренд</th>
+            <th>Категория</th>
+            <th>Варианты</th>
+            <th class="text-right">Цена</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for p in products %}
+          <tr class="hover">
+            <td>{{ p.name }}</td>
+            <td>{{ p.brand.name }}</td>
+            <td>{{ p.category.name }}</td>
+            <td class="text-sm text-slate-500">
+              {% for v in p.variants.all %}
+                {{ v.size }}/{{ v.color }} ({{ v.sku }}){% if not forloop.last %}, {% endif %}
+              {% empty %} — {% endfor %}
+            </td>
+            <td class="text-right">{{ p.price }} ₽</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="text-center text-slate-400 py-8">Нет товаров</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
