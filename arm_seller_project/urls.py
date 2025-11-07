@@ -10,4 +10,5 @@ urlpatterns = [
     path('', home, name='home'),
     path('products/', include('catalog.urls')),  # список товаров
     path('stock/', include('inventory.urls')),
+    path("pos/", include("sales.urls")),
 ]

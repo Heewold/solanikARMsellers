@@ -1,18 +1,54 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-theme="armtheme">
 <head>
-  <link rel="stylesheet" href="{% static 'build/tailwind.css' %}">
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}АРМ Продавца{% endblock %}</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'build/tailwind.css' %}">
+  <script src="https://unpkg.com/htmx.org@1.9.10" defer></script>
+  <script src="https://unpkg.com/feather-icons" defer></script>
 </head>
-<body>
-  <header style="padding:12px;border-bottom:1px solid #eee;">
-    <h2>АРМ Продавца</h2>
+<body class="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-[#0b1020] dark:to-[#0e1428] text-slate-800 dark:text-slate-200">
+
+  <!-- Topbar -->
+  <header class="sticky top-0 z-40 backdrop-blur bg-white/70 dark:bg-[#0b1020]/70 border-b border-white/20">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-brand-600/90 flex items-center justify-center text-white font-bold shadow-soft">A</div>
+        <a href="/" class="text-lg font-semibold">АРМ Продавца</a>
+      </div>
+      <nav class="hidden md:flex items-center gap-1">
+        <a href="/products/" class="btn btn-ghost-soft">Товары</a>
+        <a href="/stock/" class="btn btn-ghost-soft">Склад</a>
+        <a href="/pos/" class="btn btn-brand">POS</a>
+        <a href="/pos/history/" class="btn btn-ghost-soft">История</a>
+        <a href="/admin/" class="btn btn-ghost-soft">Админка</a>
+      </nav>
+    </div>
   </header>
-  <main style="padding:16px;max-width:1200px;margin:0 auto;">
+
+  <!-- Main -->
+  <main class="max-w-7xl mx-auto px-4 py-6">
     {% block content %}{% endblock %}
   </main>
+
+  <!-- Footer -->
+  <footer class="py-8 text-center text-sm text-slate-500/80">
+    © {{ now|date:"Y" }} АРМ Продавца — красивый интерфейс, быстрые продажи.
+  </footer>
+
+  <!-- CSRF для HTMX -->
+  <form style="display:none">{% csrf_token %}</form>
+  <script>
+    document.addEventListener('htmx:configRequest', (e) => {
+      const t = document.querySelector('input[name=csrfmiddlewaretoken]');
+      if (t) e.detail.headers['X-CSRFToken'] = t.value;
+    });
+    document.addEventListener('DOMContentLoaded', ()=>{ if (window.feather) { feather.replace(); }});
+  </script>
 </body>
 </html>

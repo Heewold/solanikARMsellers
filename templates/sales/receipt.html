@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Чек №{{ sale.id }}{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto bg-white shadow p-6 rounded-lg">
+  <h2 class="text-xl font-bold mb-2">Чек № {{ sale.id }}</h2>
+  <p class="text-sm text-slate-500 mb-4">
+    {{ sale.created_at|date:"d.m.Y H:i" }} · {{ sale.user }} · {{ sale.warehouse.name }}
+  </p>
+
+  <table class="table w-full text-sm mb-4">
+    <thead>
+      <tr><th>Товар</th><th class="text-right">Кол-во</th><th class="text-right">Сумма</th></tr>
+    </thead>
+    <tbody>
+      {% for item in sale.items.all %}
+      <tr>
+        <td>{{ item.variant.product.name }} ({{ item.variant.size }}/{{ item.variant.color }})</td>
+        <td class="text-right">{{ item.quantity }}</td>
+        <td class="text-right">{{ item.subtotal }} ₽</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="text-right text-lg font-semibold">
+    Итого: {{ sale.final_amount }} ₽
+  </div>
+
+  <div class="mt-4 flex justify-between">
+    <a href="{% url 'sales_history' %}" class="btn btn-ghost">Назад</a>
+    <button class="btn btn-primary" onclick="window.print()">Печать</button>
+  </div>
+</div>
+{% endblock %}

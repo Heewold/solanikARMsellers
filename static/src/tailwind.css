@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* гладкие скроллы и антиалиасинг */
+html { scroll-behavior: smooth; }
+body { @apply antialiased; }
+
+/* карточка-стекло */
+.card-glass { @apply bg-white/70 dark:bg-white/5 backdrop-blur-md rounded-2xl shadow-card border border-white/20; }
+
+/* заголовки страниц */
+.page-title { @apply text-2xl md:text-3xl font-semibold tracking-tight; }
+
+/* таблицы */
+.table-clean :where(th){ @apply bg-transparent text-slate-500 font-medium; }
+.table-clean :where(td){ @apply bg-transparent; }
+
+/* кнопки */
+.btn-brand { @apply btn btn-primary shadow-soft; }
+.btn-ghost-soft { @apply btn btn-ghost hover:bg-white/10; }
