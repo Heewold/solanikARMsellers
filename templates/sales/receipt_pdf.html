@@ -1,0 +1,22 @@
+<!doctype html><html lang="ru"><meta charset="utf-8">
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Helvetica Neue',Arial}
+  .row{display:flex;align-items:center}
+  .muted{color:#666}
+  .right{text-align:right}
+  .border{border-bottom:1px solid #ddd}
+</style>
+<h2>Чек №{{ sale.number }}</h2>
+<div class="muted">Оформлен {{ sale.created_at|date:"d.m.Y H:i" }} • {{ sale.get_payment_method_display }}</div>
+<hr>
+<table width="100%" cellspacing="0" cellpadding="6">
+  <tr class="muted"><td align="left">Товар</td><td align="center">Кол-во</td><td align="right">Сумма</td></tr>
+  {% for i in sale.items.all %}
+  <tr class="border">
+    <td>{{ i.name }}<div class="muted" style="font-size:12px">SKU: {{ i.sku }}</div></td>
+    <td align="center">{{ i.qty }}</td>
+    <td align="right">{{ i.subtotal|floatformat:2 }} ₽</td>
+  </tr>
+  {% endfor %}
+</table>
+<h3 class="right">Итого: {{ sale.total|floatformat:2 }} ₽</h3>

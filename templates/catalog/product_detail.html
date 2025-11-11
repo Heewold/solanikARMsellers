@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — АРМ{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold mb-6">{{ product.name }}</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div>
+    {% with main=product.images.all.0 %}
+      {% if main and main.image %}
+        <img src="{{ main.image.url }}" class="w-full rounded-lg">
+      {% else %}
+        <div class="w-full h-64 bg-slate-800/50 rounded-lg flex items-center justify-center text-slate-500">Нет фото</div>
+      {% endif %}
+    {% endwith %}
+  </div>
+  <div>
+    <div class="text-sm text-slate-400 mb-2">{{ product.brand.name }}</div>
+    <div class="space-y-2">
+      {% for v in product.variants.all %}
+        <div class="flex items-center justify-between border border-white/10 rounded p-3">
+          <div>
+            <div class="text-sm">SKU: {{ v.sku }}</div>
+          </div>
+          <div class="font-semibold">{{ v.price }} ₽</div>
+        </div>
+      {% empty %}
+        <div class="text-slate-400">Вариантов нет</div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,34 +1,41 @@
 {% extends 'base.html' %}
-{% block title %}Чек №{{ sale.id }}{% endblock %}
+{% block title %}Чек №{{ sale.number }} — АРМ{% endblock %}
 {% block content %}
-<div class="max-w-md mx-auto bg-white shadow p-6 rounded-lg">
-  <h2 class="text-xl font-bold mb-2">Чек № {{ sale.id }}</h2>
-  <p class="text-sm text-slate-500 mb-4">
-    {{ sale.created_at|date:"d.m.Y H:i" }} · {{ sale.user }} · {{ sale.warehouse.name }}
-  </p>
+<div class="mx-auto max-w-3xl">
+  <div class="card-glass rounded-2xl p-6">
+    <div class="flex items-center justify-between mb-3">
+      <div>
+        <div class="text-xl font-semibold">Чек №{{ sale.number }}</div>
+        <div class="text-sm text-slate-400">Оформлен {{ sale.created_at|date:"d.m.Y H:i" }}</div>
+      </div>
+      <div class="text-2xl font-semibold text-blue-400">{{ sale.total|floatformat:2 }} ₽</div>
+    </div>
 
-  <table class="table w-full text-sm mb-4">
-    <thead>
-      <tr><th>Товар</th><th class="text-right">Кол-во</th><th class="text-right">Сумма</th></tr>
-    </thead>
-    <tbody>
-      {% for item in sale.items.all %}
-      <tr>
-        <td>{{ item.variant.product.name }} ({{ item.variant.size }}/{{ item.variant.color }})</td>
-        <td class="text-right">{{ item.quantity }}</td>
-        <td class="text-right">{{ item.subtotal }} ₽</td>
-      </tr>
+    <div class="grid grid-cols-12 text-sm text-slate-400 border-b border-white/10 pb-2">
+      <div class="col-span-7">Товар</div>
+      <div class="col-span-2 text-center">Кол-во</div>
+      <div class="col-span-3 text-right">Сумма</div>
+    </div>
+    <div class="divide-y divide-white/10">
+      {% for i in sale.items.all %}
+      <div class="grid grid-cols-12 py-2">
+        <div class="col-span-7">
+          <div class="font-medium text-slate-100">{{ i.name }}</div>
+          <div class="text-xs text-slate-400">SKU: {{ i.sku }}</div>
+        </div>
+        <div class="col-span-2 text-center">{{ i.qty }}</div>
+        <div class="col-span-3 text-right">{{ i.subtotal|floatformat:2 }} ₽</div>
+      </div>
       {% endfor %}
-    </tbody>
-  </table>
+    </div>
 
-  <div class="text-right text-lg font-semibold">
-    Итого: {{ sale.final_amount }} ₽
-  </div>
-
-  <div class="mt-4 flex justify-between">
-    <a href="{% url 'sales_history' %}" class="btn btn-ghost">Назад</a>
-    <button class="btn btn-primary" onclick="window.print()">Печать</button>
+    <div class="mt-4 flex items-center justify-between">
+      <a href="{% url 'sales:pos' %}" class="pill">Новая продажа</a>
+      <div class="flex gap-2">
+        <a href="{% url 'sales:receipt_pdf' sale.number %}" class="pill">PDF</a>
+        <button onclick="window.print()" class="pill">Печать</button>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}

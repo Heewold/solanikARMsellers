@@ -1,51 +1,74 @@
 from django.db import models
-from django.contrib.auth import get_user_model
-from catalog.models import ProductVariant
-from inventory.models import Warehouse
+from django.utils.translation import gettext_lazy as _
 
-User = get_user_model()
+# Пытаемся использовать ProductVariant, если он есть.
+# Если нет — безопасно привязываемся к Product.
+try:
+    from catalog.models import ProductVariant as VariantModel  # type: ignore
+    VARIANT_VERBOSE = _('Вариант')
+except Exception:
+    from catalog.models import Product as VariantModel  # fallback
+    VARIANT_VERBOSE = _('Товар')
 
 
 class Sale(models.Model):
-    """Продажа / чек"""
-    created_at = models.DateTimeField("Дата и время", auto_now_add=True)
-    user = models.ForeignKey(User, verbose_name="Продавец", on_delete=models.PROTECT)
-    warehouse = models.ForeignKey(Warehouse, verbose_name="Склад", on_delete=models.PROTECT)
-    total_amount = models.DecimalField("Сумма чека", max_digits=12, decimal_places=2, default=0)
-    discount_amount = models.DecimalField("Скидка", max_digits=12, decimal_places=2, default=0)
-    final_amount = models.DecimalField("Итоговая сумма", max_digits=12, decimal_places=2, default=0)
+    number = models.CharField(_('Номер чека'), max_length=32, blank=True, unique=True)
+    created_at = models.DateTimeField(_('Создано'), auto_now_add=True)
+    payment_method = models.CharField(
+        _('Способ оплаты'),
+        max_length=16,
+        choices=(('cash', 'Наличные'), ('card', 'Карта')),
+        default='cash',
+    )
+    total = models.DecimalField(_('Итого'), max_digits=10, decimal_places=2, default=0)
 
     class Meta:
-        verbose_name = "Продажа"
-        verbose_name_plural = "Продажи"
-        ordering = ["-created_at"]
+        verbose_name = _('Продажа')
+        verbose_name_plural = _('Продажи')
+        ordering = ['-created_at']
 
     def __str__(self):
-        return f"Чек #{self.id} от {self.created_at.strftime('%d.%m.%Y %H:%M')}"
-
-    def recalc_totals(self):
-        total = sum(item.subtotal for item in self.items.all())
-        self.total_amount = total
-        self.final_amount = total - self.discount_amount
-        self.save(update_fields=["total_amount", "final_amount"])
+        return f'#{self.number or self.pk} от {self.created_at:%Y-%m-%d %H:%M}'
 
 
 class SaleItem(models.Model):
-    """Строка продажи (товар в чеке)"""
-    sale = models.ForeignKey(Sale, verbose_name="Продажа", on_delete=models.CASCADE, related_name="items")
-    variant = models.ForeignKey(ProductVariant, verbose_name="Вариант товара", on_delete=models.PROTECT)
-    quantity = models.PositiveIntegerField("Количество", default=1)
-    price = models.DecimalField("Цена", max_digits=12, decimal_places=2)
-    subtotal = models.DecimalField("Сумма", max_digits=12, decimal_places=2)
+    sale = models.ForeignKey(
+        Sale, on_delete=models.CASCADE, related_name='items', verbose_name=_('Чек')
+    )
+
+    # ВАЖНО: теперь FK указывает на VariantModel (ProductVariant ИЛИ Product)
+    variant = models.ForeignKey(
+        VariantModel,
+        on_delete=models.PROTECT,
+        related_name='sale_items',
+        null=True,
+        blank=True,
+        verbose_name=VARIANT_VERBOSE,
+    )
+
+    name = models.CharField(_('Название позиции'), max_length=255, blank=True)
+    sku = models.CharField(_('SKU / Штрихкод'), max_length=64, blank=True)
+    price = models.DecimalField(_('Цена'), max_digits=10, decimal_places=2, default=0)
+    qty = models.PositiveIntegerField(_('Кол-во'), default=1)
+    subtotal = models.DecimalField(_('Сумма'), max_digits=10, decimal_places=2, default=0)
 
     class Meta:
-        verbose_name = "Позиция продажи"
-        verbose_name_plural = "Позиции продаж"
+        verbose_name = _('Позиция чека')
+        verbose_name_plural = _('Позиции чека')
 
     def __str__(self):
-        return f"{self.variant} x {self.quantity}"
+        return self.name or f'{self.variant} x{self.qty}'
 
     def save(self, *args, **kwargs):
-        self.subtotal = self.price * self.quantity
+        # Автозаполнение name/sku из варианта/товара при необходимости
+        if self.variant:
+            if not self.name:
+                # у варианта может быть .name, а может не быть — тогда берём у product/name
+                self.name = getattr(self.variant, 'name', '') or getattr(
+                    getattr(self.variant, 'product', None), 'name', ''
+                )
+            if not self.sku:
+                self.sku = getattr(self.variant, 'sku', '') or ''
+        # пересчёт суммы
+        self.subtotal = (self.price or 0) * (self.qty or 0)
         super().save(*args, **kwargs)
-        self.sale.recalc_totals()

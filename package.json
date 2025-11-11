@@ -1,36 +1,17 @@
 {
   "name": "arm_seller",
+  "private": true,
   "version": "1.0.0",
-  "description": "Web-приложение: Автоматизированное рабочее место продавца (Django + Tailwind + daisyUI)",
-  "main": "index.js",
-  ""scripts": {
-  "dev": "tailwindcss -i ./static/src/tailwind.css -o ./static/build/tailwind.css --watch"
-  "build": "npx tailwindcss -i ./static/src/tailwind.css -o ./static/build/tailwind.css --minify"
+  "scripts": {
+    "dev": "tailwindcss -i ./static/src/tailwind.css -o ./static/build/tailwind.css --watch",
+    "build": "tailwindcss -i ./static/src/tailwind.css -o ./static/build/tailwind.css --minify"
   },
-  "keywords": [
-    "django",
-    "tailwind",
-    "daisyui",
-    "arm",
-    "store"
-  ],
-  "author": "Anton",
-  "license": "MIT",
   "devDependencies": {
-    "@tailwindcss/forms": "^0.5.10",
-    "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/forms": "^0.5.7",
+    "@tailwindcss/typography": "^0.5.15",
     "autoprefixer": "^10.4.20",
-    "daisyui": "^4.12.24",
+    "daisyui": "^4.12.10",
     "postcss": "^8.4.47",
-    "tailwindcss": "^4.1.17"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Heewold/solanikARMsellers.git"
-  },
-  "type": "commonjs",
-  "bugs": {
-    "url": "https://github.com/Heewold/solanikARMsellers/issues"
-  },
-  "homepage": "https://github.com/Heewold/solanikARMsellers#readme"
+    "tailwindcss": "^3.4.14"
+  }
 }

@@ -1,7 +1,10 @@
+# inventory/urls.py
 from django.urls import path
-from .views import stock_list, low_stock
+from . import views
+
+app_name = "inventory"
 
 urlpatterns = [
-    path('', stock_list, name='stock_list'),
-    path('low/', low_stock, name='low_stock'),
+    path("", views.stock_list, name="stock_list"),          # /stock/
+    path("low/", views.stock_low, name="stock_low"),        # /stock/low/
 ]

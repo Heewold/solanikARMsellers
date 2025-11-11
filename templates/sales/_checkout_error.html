@@ -1,36 +1,4 @@
-<div class="modal modal-open">
-  <div class="modal-box">
-    <h3 class="font-bold text-lg text-red-600">Не удалось оформить продажу</h3>
-
-    {% if shortages and shortages|length > 0 %}
-      <p class="py-2 text-sm text-slate-600">
-        На складе <b>{{ warehouse.name }}</b> не хватает следующих товаров:
-      </p>
-      <ul class="list-disc ml-5 my-2 text-sm">
-        {% for s in shortages %}
-          <li>
-            {{ s.variant.product.name }}
-            {% if s.variant.size or s.variant.color %}
-              — {{ s.variant.size }}/{{ s.variant.color }}
-            {% endif %}
-            (SKU {{ s.variant.sku }}): нужно {{ s.need }}, доступно {{ s.available }}.
-          </li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      <p class="py-2 text-sm text-slate-600">
-        {% if error_message %}
-          {{ error_message }}
-        {% else %}
-          Возникла непредвиденная ошибка при оформлении продажи.
-        {% endif %}
-      </p>
-    {% endif %}
-
-    <div class="modal-action">
-      <button class="btn" onclick="document.getElementById('dialog').innerHTML=''">
-        Ок
-      </button>
-    </div>
-  </div>
+<div class="p-4 rounded-xl bg-rose-600/10 border border-rose-500/30 text-rose-300">
+  <div class="font-semibold">Ошибка</div>
+  <div class="text-sm opacity-80">{{ message|default:"Не удалось оформить продажу" }}</div>
 </div>

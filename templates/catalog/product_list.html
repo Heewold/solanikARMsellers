@@ -1,58 +1,77 @@
-{% extends 'base.html' %}
-{% block title %}Товары — АРМ{% endblock %}
+{% extends "base.html" %}
+{% load static %}
+
+{# Если в base.html ты подсвечиваешь активный пункт меню через page_name — прокинем переменную #}
 {% block content %}
+{% with page_name="products" %}
+
 <h1 class="text-2xl font-semibold mb-4">Товары</h1>
 
-<form method="get" class="grid grid-cols-12 gap-2 mb-4">
-  <input name="q" value="{{ q }}" placeholder="Название / SKU / Штрих-код"
-         class="input input-bordered col-span-5" />
-  <select name="brand" class="select select-bordered col-span-3">
-    <option value="">Бренд</option>
-    {% for b in brands %}
-      <option value="{{ b.id }}" {% if brand_selected == b.id %}selected{% endif %}>{{ b.name }}</option>
-    {% endfor %}
-  </select>
-  <select name="category" class="select select-bordered col-span-3">
-    <option value="">Категория</option>
-    {% for c in categories %}
-      <option value="{{ c.id }}" {% if category_selected == c.id %}selected{% endif %}>{{ c.name }}</option>
-    {% endfor %}
-  </select>
-  <button class="btn col-span-1">Фильтр</button>
-</form>
-
-<div class="card bg-base-100 shadow-sm">
-  <div class="card-body p-0">
-    <div class="overflow-x-auto">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Товар</th>
-            <th>Бренд</th>
-            <th>Категория</th>
-            <th>Варианты</th>
-            <th class="text-right">Цена</th>
-          </tr>
-        </thead>
-        <tbody>
-        {% for p in products %}
-          <tr class="hover">
-            <td>{{ p.name }}</td>
-            <td>{{ p.brand.name }}</td>
-            <td>{{ p.category.name }}</td>
-            <td class="text-sm text-slate-500">
-              {% for v in p.variants.all %}
-                {{ v.size }}/{{ v.color }} ({{ v.sku }}){% if not forloop.last %}, {% endif %}
-              {% empty %} — {% endfor %}
-            </td>
-            <td class="text-right">{{ p.price }} ₽</td>
-          </tr>
-        {% empty %}
-          <tr><td colspan="5" class="text-center text-slate-400 py-8">Нет товаров</td></tr>
-        {% endfor %}
-        </tbody>
-      </table>
+<form method="get" class="card-glass p-4 mb-6 animate-up">
+  <div class="grid grid-cols-12 gap-3">
+    <div class="col-span-12 md:col-span-9">
+      <input
+        type="text"
+        name="q"
+        value="{{ request.GET.q }}"
+        class="input input-bordered w-full"
+        placeholder="Название / SKU / штрихкод">
+    </div>
+    <div class="col-span-12 md:col-span-3">
+      <button class="btn-brand w-full h-12">Фильтр</button>
     </div>
   </div>
+</form>
+
+{# Сетка карточек #}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+  {% for p in products %}
+    {% with imgs=p.images.all %}
+    <article class="group rounded-2xl border border-white/10 bg-white/70 dark:bg-white/5 backdrop-blur shadow-soft hover:shadow-lg hover:-translate-y-[2px] transition overflow-hidden">
+      <a href="{% url 'admin:catalog_product_change' p.id %}" class="block">
+
+        <div class="relative aspect-[4/3] bg-slate-200/50 dark:bg-slate-800/40">
+          {# ВАЖНО: медиа — только через {{ ...url }}, без {% static %} #}
+          {% if imgs|length and imgs.0.image %}
+            <img
+              src="{{ imgs.0.image.url }}"
+              alt="{{ p.name }}"
+              class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 opacity-100 group-hover:opacity-90">
+          {% else %}
+            <div class="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">
+              Нет фото
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="p-4">
+          {% if p.brand %}
+            <div class="text-xs text-slate-500">{{ p.brand.name }}</div>
+          {% endif %}
+          <div class="font-medium mt-1 line-clamp-2">{{ p.name }}</div>
+        </div>
+      </a>
+    </article>
+    {% endwith %}
+  {% empty %}
+    <div class="col-span-12 text-center text-slate-400 py-20">
+      Ничего не найдено…
+    </div>
+  {% endfor %}
 </div>
+
+{# Простая пагинация (если передан page_obj) #}
+{% if page_obj %}
+  <div class="mt-8 flex justify-center items-center gap-2">
+    {% if page_obj.has_previous %}
+      <a class="btn btn-sm" href="?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Назад</a>
+    {% endif %}
+    <span class="text-sm text-slate-400 px-2 py-1">стр. {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a class="btn btn-sm" href="?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}">Вперёд</a>
+    {% endif %}
+  </div>
+{% endif %}
+
+{% endwith %}
 {% endblock %}

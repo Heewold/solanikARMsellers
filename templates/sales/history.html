@@ -1,32 +1,8 @@
-{% extends 'base.html' %}
-{% block title %}История продаж{% endblock %}
+{% extends "base.html" %}
+{% block title %}История продаж — АРМ{% endblock %}
 {% block content %}
-<h1 class="text-2xl font-semibold mb-4">История продаж</h1>
-
-<table class="table table-zebra w-full text-sm">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Дата</th>
-      <th>Продавец</th>
-      <th>Склад</th>
-      <th class="text-right">Сумма</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for s in sales %}
-    <tr>
-      <td>{{ s.id }}</td>
-      <td>{{ s.created_at|date:"d.m.Y H:i" }}</td>
-      <td>{{ s.user }}</td>
-      <td>{{ s.warehouse.name }}</td>
-      <td class="text-right font-medium">{{ s.final_amount }} ₽</td>
-      <td><a href="{% url 'sale_receipt' s.id %}" class="btn btn-xs btn-outline">Чек</a></td>
-    </tr>
-    {% empty %}
-    <tr><td colspan="6" class="text-center py-8 text-slate-400">Продаж пока нет</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-2xl font-semibold mb-4">История продаж</h1>
+    <p class="text-slate-400">Пока заглушка. Страница открывается и навигация активируется.</p>
+  </div>
 {% endblock %}

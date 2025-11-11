@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Движения склада{% endblock %}
+{% block content %}
+<div class="card-glass p-0 overflow-x-auto">
+  <table class="table w-full">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Тип</th>
+        <th>Товар</th>
+        <th class="hidden md:table-cell">Склад</th>
+        <th class="text-right">Δ</th>
+        <th class="hidden md:table-cell">Примечание</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for m in moves %}
+      <tr>
+        <td class="text-slate-400">{{ m.id }}</td>
+        <td class="uppercase">{{ m.move_type }}</td>
+        <td>
+          {{ m.variant.product.name }}
+          {% if m.variant.name %}<span class="text-slate-400">/ {{ m.variant.name }}</span>{% endif %}
+          <div class="text-xs text-slate-400">{{ m.variant.sku }}</div>
+        </td>
+        <td class="hidden md:table-cell text-slate-400">{{ m.warehouse.name }}</td>
+        <td class="text-right font-semibold">{{ m.qty_delta }}</td>
+        <td class="hidden md:table-cell text-slate-400">{{ m.note }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" class="p-8 text-center text-slate-400">Пока пусто…</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

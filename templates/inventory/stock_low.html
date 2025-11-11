@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Низкие остатки{% endblock %}
+
+{% block content %}
+<h1 class="text-2xl font-semibold mb-4">Низкие остатки</h1>
+
+<div class="card-glass p-4">
+  <table class="w-full text-sm">
+    <thead class="text-slate-500">
+      <tr>
+        <th class="text-left py-2">Товар</th>
+        <th class="text-left py-2">Вариант</th>
+        <th class="text-left py-2">Склад</th>
+        <th class="text-right py-2">Количество</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in items %}
+      <tr class="border-t border-white/10">
+        <td class="py-2">
+          {{ i.variant.product.name|default:"—" }}
+        </td>
+        <td class="py-2">
+          {{ i.variant.name|default:i.variant.sku|default:"—" }}
+        </td>
+        <td class="py-2">
+          {{ i.warehouse.name|default:"—" }}
+        </td>
+        <td class="py-2 text-right">
+          {{ i.qty|default:0 }}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="4" class="py-6 text-center text-slate-400">Всё в порядке — низких остатков нет</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

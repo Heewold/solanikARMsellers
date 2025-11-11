@@ -1,51 +1,56 @@
 from django.contrib import admin
-from .models import Brand, Category, Product, ProductVariant, ProductImage
+from django.utils.html import format_html
+
+from .models import Product, ProductImage, Brand, Category
 
 
 @admin.register(Brand)
 class BrandAdmin(admin.ModelAdmin):
-    list_display = ("name", "slug")
-    search_fields = ("name",)
-    prepopulated_fields = {"slug": ("name",)}
+    search_fields = ('name',)
+    list_display = ('id', 'name')
+    ordering = ('name',)
 
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("name", "parent", "slug")
-    list_filter = ("parent",)
-    search_fields = ("name",)
-    prepopulated_fields = {"slug": ("name",)}
+    search_fields = ('name',)
+    list_display = ('id', 'name', 'parent')
+    list_filter = ('parent',)
+    ordering = ('name',)
 
 
-class ProductImageInline(admin.TabularInline):
+class ProductImageInline(admin.TabularInline):  # можно StackedInline, если хочется повыше форму
     model = ProductImage
-    extra = 0
-
-
-class ProductVariantInline(admin.TabularInline):
-    model = ProductVariant
     extra = 1
-    fields = ("size", "color", "sku", "barcode", "price_override")
+    fields = ('preview', 'image', 'is_main')
+    readonly_fields = ('preview',)
+
+    def preview(self, obj):
+        if obj and obj.image:
+            return format_html(
+                '<img src="{}" style="height:64px; border-radius:6px; box-shadow:0 0 0 1px rgba(0,0,0,.06)" />',
+                obj.image.url
+            )
+        return '—'
+    preview.short_description = 'Превью'
 
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ("name", "brand", "category", "price", "is_active")
-    list_filter = ("brand", "category", "gender", "season", "is_active")
-    search_fields = ("name", "variants__sku", "variants__barcode")
-    inlines = [ProductImageInline, ProductVariantInline]
-
-
-@admin.register(ProductVariant)
-class ProductVariantAdmin(admin.ModelAdmin):
-    list_display = ("product", "size", "color", "sku", "barcode", "price_override")
-    list_filter = ("product__brand", "product__category", "size", "color")
-    search_fields = ("sku", "barcode", "product__name", "color", "size")
-    autocomplete_fields = ("product",)
+    list_display = ('id', 'name', 'brand', 'category')
+    search_fields = ('name', 'brand__name', 'category__name')
+    list_filter = ('brand', 'category')
+    inlines = [ProductImageInline]
 
 
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):
-    list_display = ("product", "image", "is_primary")  # <-- фикс: is_primary
-    list_filter = ("product", "is_primary")
-    search_fields = ("product__name",)
+    list_display = ('id', 'product', 'is_main', 'thumb')
+    list_filter = ('is_main', 'product__brand', 'product__category')
+    search_fields = ('product__name',)
+
+    def thumb(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="height:48px;border-radius:4px" />', obj.image.url)
+        return '—'
+    thumb.short_description = 'Превью'

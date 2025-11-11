@@ -1,40 +1,8 @@
-{% extends 'base.html' %}
-{% block title %}POS — Продажа{% endblock %}
+{% extends "base.html" %}
+{% block title %}Касса — АРМ{% endblock %}
 {% block content %}
-
-<h1 class="page-title mb-6">Продажа (POS)</h1>
-
-<div class="grid grid-cols-12 gap-6">
-  <!-- Поиск -->
-  <section class="col-span-12 lg:col-span-8 card-glass p-5">
-    <form hx-get="{% url 'pos_search' %}" hx-target="#search-results" hx-swap="innerHTML" class="flex gap-3">
-      <input type="text" name="q" class="input input-bordered w-full"
-             placeholder="Сканируйте штрих-код / введите SKU или название…" autofocus>
-      <button class="btn-brand" type="submit">Найти</button>
-    </form>
-    <div id="search-results" class="mt-5 grid gap-3"></div>
-  </section>
-
-  <!-- Корзина (sticky) -->
-  <aside class="col-span-12 lg:col-span-4">
-    <div class="card-glass p-5 lg:sticky lg:top-24">
-      <div id="cart" hx-get="{% url 'pos_cart' %}" hx-trigger="load" hx-swap="innerHTML"></div>
-
-      <div class="mt-4 flex items-center justify-between gap-3">
-        <button class="btn btn-ghost w-1/2"
-                hx-post="{% url 'pos_clear' %}"
-                hx-target="#cart" hx-swap="innerHTML">Очистить</button>
-
-        <form class="w-1/2"
-              hx-post="{% url 'pos_checkout' %}"
-              hx-target="#dialog" hx-swap="innerHTML">
-          {% csrf_token %}
-          <button class="btn-brand w-full" type="submit">Оформить</button>
-        </form>
-      </div>
-    </div>
-  </aside>
-</div>
-
-<div id="dialog"></div>
+  <div class="max-w-3xl mx-auto">
+    <h1 class="text-2xl font-semibold mb-4">Касса</h1>
+    <p class="text-slate-400">Минимальная заглушка страницы кассы. Тут позже подключим поиск, корзину и оформление.</p>
+  </div>
 {% endblock %}

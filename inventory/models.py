@@ -1,19 +1,23 @@
-from django.db import models, transaction
-from django.contrib.auth import get_user_model
-from django.utils import timezone
-from catalog.models import ProductVariant, Product
+from django.db import models
+from django.utils.translation import gettext_lazy as _
 
-User = get_user_model()
+# Аккуратно пытаемся подхватить ProductVariant. Если его нет – используем Product.
+try:
+    from catalog.models import ProductVariant as VariantModel  # type: ignore
+    VARIANT_VERBOSE = _('Вариант')
+except Exception:
+    from catalog.models import Product as VariantModel  # fallback
+    VARIANT_VERBOSE = _('Товар')
 
 
 class Warehouse(models.Model):
-    name = models.CharField('Склад', max_length=120, unique=True)
-    slug = models.SlugField('Слаг', max_length=140, unique=True)
-    is_default = models.BooleanField('Склад по умолчанию', default=True)
+    name = models.CharField(_('Название склада'), max_length=120, unique=True)
+    slug = models.SlugField(_('Слаг'), max_length=64, unique=True)
+    is_default = models.BooleanField(_('По умолчанию'), default=False)
 
     class Meta:
-        verbose_name = 'Склад'
-        verbose_name_plural = 'Склады'
+        verbose_name = _('Склад')
+        verbose_name_plural = _('Склады')
         ordering = ['name']
 
     def __str__(self):
@@ -21,76 +25,46 @@ class Warehouse(models.Model):
 
 
 class InventoryItem(models.Model):
-    """Остаток конкретного варианта на складе."""
-    warehouse = models.ForeignKey(Warehouse, verbose_name='Склад',
-                                  on_delete=models.CASCADE, related_name='stocks')
-    variant = models.ForeignKey(ProductVariant, verbose_name='Вариант',
-                                on_delete=models.CASCADE, related_name='stocks')
-
-    qty_on_hand = models.IntegerField('На руках', default=0)
-    qty_reserved = models.IntegerField('Резерв', default=0)
-    min_qty = models.IntegerField('Мин. остаток', default=0)
+    warehouse = models.ForeignKey(
+        Warehouse, on_delete=models.CASCADE, related_name='items', verbose_name=_('Склад')
+    )
+    # ВАЖНО: поле называется "variant", но тип — тот, что мы импортировали выше
+    variant = models.ForeignKey(
+        VariantModel, on_delete=models.CASCADE, related_name='stock', verbose_name=VARIANT_VERBOSE
+    )
+    qty = models.IntegerField(_('Остаток'), default=0)
 
     class Meta:
-        verbose_name = 'Остаток'
-        verbose_name_plural = 'Остатки'
-        unique_together = ('warehouse', 'variant')
+        verbose_name = _('Остаток на складе')
+        verbose_name_plural = _('Остатки на складе')
+        unique_together = (('warehouse', 'variant'),)
+        ordering = ['warehouse_id']
 
     def __str__(self):
-        return f'{self.variant} @ {self.warehouse} = {self.qty_on_hand}'
-
-    @property
-    def available(self) -> int:
-        return self.qty_on_hand - self.qty_reserved
-
-    @property
-    def product(self) -> Product:
-        return self.variant.product
+        return f'{self.warehouse} — {self.variant} : {self.qty}'
 
 
 class StockMovement(models.Model):
-    class Type(models.TextChoices):
-        IN = 'IN', 'Приход'
-        OUT = 'OUT', 'Расход'
-        ADJUST = 'ADJ', 'Корректировка'
+    class MoveType(models.TextChoices):
+        IN = 'IN', _('Приход')
+        OUT = 'OUT', _('Расход')
 
-    created_at = models.DateTimeField('Создано', default=timezone.now)
-    user = models.ForeignKey(User, verbose_name='Пользователь',
-                             on_delete=models.SET_NULL, null=True, blank=True)
-
-    warehouse = models.ForeignKey(Warehouse, verbose_name='Склад',
-                                  on_delete=models.PROTECT, related_name='moves')
-    variant = models.ForeignKey(ProductVariant, verbose_name='Вариант',
-                                on_delete=models.PROTECT, related_name='moves')
-
-    move_type = models.CharField('Тип', max_length=4, choices=Type.choices)
-    qty_delta = models.IntegerField('Δ Количество')  # + для прихода, – для расхода
-    note = models.CharField('Комментарий', max_length=255, blank=True)
+    warehouse = models.ForeignKey(
+        Warehouse, on_delete=models.CASCADE, related_name='movements', verbose_name=_('Склад')
+    )
+    variant = models.ForeignKey(
+        VariantModel, on_delete=models.CASCADE, related_name='movements', verbose_name=VARIANT_VERBOSE
+    )
+    move_type = models.CharField(_('Тип движения'), max_length=3, choices=MoveType.choices)
+    qty_delta = models.IntegerField(_('Кол-во'), default=0)
+    note = models.CharField(_('Примечание'), max_length=255, blank=True)
+    created_at = models.DateTimeField(_('Когда'), auto_now_add=True)
 
     class Meta:
-        verbose_name = 'Движение'
-        verbose_name_plural = 'Движения'
+        verbose_name = _('Движение товара')
+        verbose_name_plural = _('Движения товара')
         ordering = ['-created_at']
 
     def __str__(self):
-        sign = '+' if self.qty_delta >= 0 else ''
-        return f'[{self.get_move_type_display()}] {self.variant} {sign}{self.qty_delta}'
-
-    def apply(self):
-        """Атомично применяет движение к остаткам."""
-        with transaction.atomic():
-            stock, _ = InventoryItem.objects.select_for_update().get_or_create(
-                warehouse=self.warehouse, variant=self.variant
-            )
-            new_qty = stock.qty_on_hand + self.qty_delta
-            if new_qty < 0:
-                raise ValueError('Нельзя списать больше, чем есть на складе')
-            stock.qty_on_hand = new_qty
-            stock.save()
-
-    def save(self, *args, **kwargs):
-        is_new = self._state.adding
-        super().save(*args, **kwargs)
-        if is_new:
-            # применять только при первом сохранении, чтобы не удваивать эффект
-            self.apply()
+        sign = '+' if self.move_type == self.MoveType.IN else '−'
+        return f'{self.created_at:%Y-%m-%d %H:%M} {self.warehouse} {sign}{abs(self.qty_delta)} {self.variant}'
